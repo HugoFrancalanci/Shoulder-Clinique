@@ -65,12 +65,13 @@ disp(' ');
 % - EMG: zeroing (mean), filtering (btw bandpass 4th order 30-450 Hz)
 % - Force: smoothing (btw lowpass 2nd order 10 Hz)
 % -------------------------------------------------------------------------
-disp('Pré-traitement des données');
-% if ~isfolder('Processed')
+doPreprocessing = false; % Mettre à false pour sauter le pré-traitement (si déjà effectué)
+if doPreprocessing
+    disp('Pré-traitement des données');
     addpath(Folder.preprocessing);
     MAIN_Preprocessing_toolbox(Patient.ID,Session.ID,datestr(Session.date,'YYYYmmDD'),Session.protocol,Folder.preprocessing,[Folder.data,'\Raw\']);
     rmpath(Folder.preprocessing);
-% end
+end
 addpath(Folder.toolbox);
 cd(Folder.toolbox);
 
