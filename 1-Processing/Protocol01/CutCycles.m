@@ -56,8 +56,9 @@ if contains(c3dFiles.name,'ANALYTIC') || contains(c3dFiles.name,'FUNCTIONAL')
     if ~isempty(value)
         % Cycle detection: click on the figure to set the threshold (Y = threshold),
         % cycles update live. Enter = validate, m+Enter = manual fallback (ginput(6)).
-        value   = unwrap(value);
-        Rcycles = detectCyclesAuto(value, 'Côté droit', motionLabel);
+        value      = unwrap(value);
+        rejcHeight = squeeze(Trial.Vmarker(10).Trajectory.full(3,1,:))'; % REJC (coude), hauteur - repère visuel si HT est bordélique
+        Rcycles    = detectCyclesAuto(value, 'Côté droit', motionLabel, rejcHeight);
     end
     % Left side
     if contains(c3dFiles.name,'ANALYTIC2') || contains(c3dFiles.name,'ANALYTIC5') || contains(c3dFiles.name,'FUNCTIONAL3')
@@ -70,8 +71,9 @@ if contains(c3dFiles.name,'ANALYTIC') || contains(c3dFiles.name,'FUNCTIONAL')
         value = squeeze(Trial.Joint(6).Euler.full(:,2,:))';
     end
     if ~isempty(value)
-        value   = unwrap(value);
-        Lcycles = detectCyclesAuto(value, 'Côté gauche', motionLabel);
+        value      = unwrap(value);
+        lejcHeight = squeeze(Trial.Vmarker(12).Trajectory.full(3,1,:))'; % LEJC (coude), hauteur - repère visuel si HT est bordélique
+        Lcycles    = detectCyclesAuto(value, 'Côté gauche', motionLabel, lejcHeight);
     end
 
     % Cut cycles
@@ -362,17 +364,37 @@ end
 % threshold (Y position = threshold), cycles update live. Re-click to
 % adjust. Enter = validate, m+Enter = manual fallback.
 % =========================================================================
-function cycles = detectCyclesAuto(value, label, filename)
+function cycles = detectCyclesAuto(value, label, filename, refTrajectory)
+
+if nargin < 4
+    refTrajectory = [];
+end
 
 cycles = [];
 
 fig = figure('Position',[100 200 1400 500]);
 fprintf('\n %s (%s)\n', filename, label);
 fprintf('  - Cliquez sur la figure pour définir le seuil (Y) et le départ (X). Re-cliquez pour ajuster.\n');
-fprintf('  - Entrée = valider | m+Entrée = manuel\n');
+fprintf('  - Entrée = valider | m+Entrée = manuel | i+Entrée = inverser le repère coude\n');
 
-ymin      = min(value) * 1.1;
-ymax      = max(value) * 1.1;
+% Orientation par défaut du repère coude : alignée visuellement sur le sens
+% de la courbe HT (covariance) pour limiter les cas où les deux courbes
+% semblent inversées l'une par rapport à l'autre.
+flipRef = false;
+if ~isempty(refTrajectory) && numel(refTrajectory) == numel(value)
+    vv = value(:) - mean(value(:));
+    rr = refTrajectory(:) - mean(refTrajectory(:));
+    if sum(vv.*rr) < 0
+        flipRef = true;
+    end
+end
+
+vrange    = max(value) - min(value);
+if vrange == 0
+    vrange = max(abs(value(1)), 1); % Éviter une marge nulle si le signal est constant
+end
+ymin      = min(value) - 0.1*vrange;
+ymax      = max(value) + 0.1*vrange;
 threshold = [];
 xStart    = 1; % Frame from which the threshold is applied (to ignore noise at the onset of movement).
 
@@ -384,6 +406,18 @@ while true
     plot(1:length(value), value, 'Color',[0.4 0.4 0.8], 'LineWidth',1.2);
     xlabel('Frames'); ylabel('Angle (deg)');
     ylim([ymin ymax]);
+
+    if ~isempty(refTrajectory)
+        % Trajectoire du coude (hauteur) affichée en repère visuel, sur un axe
+        % Y secondaire, pour aider à découper les cycles si le signal HT est bruité
+        yyaxis right
+        plot(1:length(refTrajectory), refTrajectory, 'Color',[0.6 0.6 0.6], 'LineWidth',1);
+        ylabel('Hauteur coude (m)');
+        if flipRef
+            set(gca,'YDir','reverse'); % Aligne visuellement le sens des deux courbes
+        end
+        yyaxis left
+    end
 
     if ~isempty(threshold)
         yline(threshold, 'r--', 'LineWidth',1.5, ...
@@ -417,8 +451,10 @@ while true
         break;
     elseif btn == 109  % 'm' key
         close(fig);
-        cycles = manualCycleSelection(value, label, filename);
+        cycles = manualCycleSelection(value, label, filename, refTrajectory);
         return;
+    elseif btn == 105  % 'i' key: inverse manuellement le repère coude affiché
+        flipRef = ~flipRef;
     else
         threshold = yclk; % signed: user clicks at the right Y level
         xStart    = max(1, round(xclk)); % Starting frame = X from the mouse click
@@ -435,7 +471,7 @@ ncycles = min(length(starts), length(stops));
 
 if ncycles == 0
     fprintf('  - Aucun cycle détecté au-dessus du seuil %.1f -- passage en mode manuel.\n', threshold);
-    cycles = manualCycleSelection(value, label, filename);
+    cycles = manualCycleSelection(value, label, filename, refTrajectory);
     return;
 end
 
@@ -447,7 +483,11 @@ end
 % =========================================================================
 % SUBFUNCTION: manual fallback (ginput(6))
 % =========================================================================
-function cycles = manualCycleSelection(value, label, filename)
+function cycles = manualCycleSelection(value, label, filename, refTrajectory)
+
+if nargin < 4
+    refTrajectory = [];
+end
 
 cycles = [];
 fig2   = figure('Position',[200 300 1200 400]);
@@ -456,6 +496,25 @@ title(sprintf('%s (%s) MANUEL - 6 clics : paires début/fin. Cliquez dans la zon
       filename, label), 'Interpreter','none');
 plot(1:length(value), value, 'red');
 rectangle('Position',[0 -10 length(value) 10],'FaceColor',[1 0 0],'FaceAlpha',0.2,'EdgeColor','none');
+if ~isempty(refTrajectory)
+    % Trajectoire du coude (hauteur) en repère visuel, axe Y secondaire,
+    % orientée pour suivre visuellement le sens de la courbe HT
+    flipRef = false;
+    if numel(refTrajectory) == numel(value)
+        vv = value(:) - mean(value(:));
+        rr = refTrajectory(:) - mean(refTrajectory(:));
+        if sum(vv.*rr) < 0
+            flipRef = true;
+        end
+    end
+    yyaxis right
+    plot(1:length(refTrajectory), refTrajectory, 'Color',[0.6 0.6 0.6], 'LineWidth',1);
+    ylabel('Hauteur coude (m)');
+    if flipRef
+        set(gca,'YDir','reverse');
+    end
+    yyaxis left
+end
 localmin = ginput(6); % If nothing to select, click in the red rectangle
 close(fig2);
 
