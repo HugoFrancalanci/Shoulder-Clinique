@@ -35,10 +35,10 @@ disp(' ');
 % -------------------------------------------------------------------------
 disp('Définition des répertoires de travail');
 MainFolder           = 'C:\Users\franc\Desktop\Programming\03_Outputs\Clinique_Dev';
-Folder.preprocessing = [MainFolder,'\KLAB_ShoulderAnalysis_Toolbox-master_v4\0-Preprocessing\'];
-Folder.toolbox       = [MainFolder,'\KLAB_ShoulderAnalysis_Toolbox-master_v4\1-Processing\Protocol01\'];
+Folder.preprocessing = [MainFolder,'\0-Preprocessing\'];
+Folder.toolbox       = [MainFolder,'\1-Processing\Protocol01\'];
 Folder.data          = uigetdir(); % Patient folder defined by GUI
-Folder.dependencies  = [MainFolder,'\KLAB_ShoulderAnalysis_Toolbox-master_v4\1-Processing\dependencies\'];
+Folder.dependencies  = [MainFolder,'1-Processing\dependencies\'];
 addpath(genpath(Folder.dependencies));
 addpath(Folder.toolbox);
 addpath(Folder.preprocessing);
@@ -86,14 +86,45 @@ eval(userCommands);
 % Load data
 cd([Folder.data,'\Processed\']);
 c3dFiles   = dir('*.c3d');
+% Selon le patient, un essai CALIBRATIONn peut avoir été nommé STATICn
+% (ou STATIC seul, considéré alors comme CALIBRATION3 par défaut) : on
+% renomme le fichier sur disque pour que le reste du pipeline (qui
+% identifie les essais par leur nom de fichier) fonctionne sans changement.
+for ifile = 1:length(c3dFiles)
+    calibToken = regexp(c3dFiles(ifile).name,'STATIC(\d?)','tokens','once');
+    if ~isempty(calibToken)
+        if isempty(calibToken{1})
+            newName = strrep(c3dFiles(ifile).name,'STATIC','CALIBRATION3');
+        else
+            newName = strrep(c3dFiles(ifile).name,['STATIC',calibToken{1}],['CALIBRATION',calibToken{1}]);
+        end
+        movefile(c3dFiles(ifile).name,newName);
+    end
+end
+c3dFiles   = dir('*.c3d'); % Rafraîchir la liste après renommage
 trialTypes = {'CALIBRATION','ANALYTIC','FUNCTIONAL'};
 k          = 1;
 %%
-for i = [7,5,6,8,9,10,1,2,3,4,11,12,13,14] %[7,5,6,8,9,10,1,2,3,4,11,12,13,14]
+% Ordre de traitement attendu. Les essais absents pour ce patient sont
+% simplement ignorés : le nombre de fichiers peut varier d'une session à l'autre.
+trialOrder = {'CALIBRATION3','CALIBRATION1','CALIBRATION2','CALIBRATION4', ...
+              'CALIBRATION5','CALIBRATION6', ...
+              'ANALYTIC1','ANALYTIC2','ANALYTIC3','ANALYTIC4','ANALYTIC5', ...
+              'FUNCTIONAL1','FUNCTIONAL2','FUNCTIONAL3','FUNCTIONAL4'};
+orderedIdx = [];
+for itype = 1:length(trialOrder)
+    for ifile = 1:length(c3dFiles)
+        if contains(c3dFiles(ifile).name,trialOrder{itype})
+            orderedIdx(end+1) = ifile; %#ok<AGROW>
+        end
+    end
+end
+
+for i = orderedIdx
     for j = 1:size(trialTypes,2)
-        if contains(c3dFiles(i).name,trialTypes{j})  
+        if contains(c3dFiles(i).name,trialTypes{j})
             disp(' ');
-            % Extract data from C3D files 
+            % Extract data from C3D files
             if contains(c3dFiles(i).name,'CALIBRATION')
                 Trial(k).task = c3dFiles(i).name(end-18:end-7);
             elseif contains(c3dFiles(i).name,'ANALYTIC')
@@ -124,17 +155,17 @@ for i = [7,5,6,8,9,10,1,2,3,4,11,12,13,14] %[7,5,6,8,9,10,1,2,3,4,11,12,13,14]
             mass                 = 4; % (kg) Mass used for calibration
             Analog               = btkGetAnalogs(Trial(k).btk);
             if strcmp(Trial(k).task,'CALIBRATION5') || strcmp(Trial(k).task,'CALIBRATION6')
-                calibration      = Trial(4).Fsensor.calibration; % from CALIBRATION4
+                calibration      = Trial(strcmp({Trial.task},'CALIBRATION4')).Fsensor.calibration; % from CALIBRATION4
             else
                 calibration      = [];
             end
             Trial(k)             = InitialiseForceSignals(c3dFiles(i),Trial(k),Analog,Event,mass,calibration);
             % Import EMG signals
             Trial(k).Emg         = [];
-            if strcmp(Trial(k).task,'CALIBRATION3')                
+            if strcmp(Trial(k).task,'CALIBRATION3')
                 Trial(k)         = InitialiseEmgSignals(emgSet,Trial(k),[],Analog);
-            else                
-                Trial(k)         = InitialiseEmgSignals(emgSet,Trial(k),Trial(1),Analog); % Load Trial(1) as reference baseline container
+            else
+                Trial(k)         = InitialiseEmgSignals(emgSet,Trial(k),Trial(strcmp({Trial.task},'CALIBRATION3')),Analog); % Load CALIBRATION3 trial as reference baseline container
             end
             % Manage kinematics
             Trial(k).Segment     = [];
@@ -142,7 +173,7 @@ for i = [7,5,6,8,9,10,1,2,3,4,11,12,13,14] %[7,5,6,8,9,10,1,2,3,4,11,12,13,14]
             Trial(k).Rcycle      = [];
             Trial(k).Lcycle      = [];
             Trial(k).SHR         = [];
-            if i ~= 8 % Not applicable
+            if ~contains(c3dFiles(i).name,'CALIBRATION4') % Not applicable
                 % Initialise segments
                 Trial(k)         = InitialiseSegments(Trial(k));
                 % Initialise joints
@@ -161,7 +192,7 @@ for i = [7,5,6,8,9,10,1,2,3,4,11,12,13,14] %[7,5,6,8,9,10,1,2,3,4,11,12,13,14]
                 close all;
             end
             % Update C3D files
-            UpdateC3DFile(Trial(k),c3dFiles(i),0);
+            % UpdateC3DFile(Trial(k),c3dFiles(i),0);
             % Increment trial index
             k                    = k+1;
         end
@@ -171,20 +202,20 @@ end
 %% -------------------------------------------------------------------------
 % GENERATE REPORT
 % -------------------------------------------------------------------------
-disp('Génération du rapport');
-cd(Folder.data);
-mkdir('Report');
-cd('Report');
-close all;
-if isempty(dir('*.docx'))
-    copyfile([Folder.toolbox,'Report\KLAB - Analyse quantifiée du membre supérieur - Rapport - Template.docx'],[Folder.data,'\Report\',num2str(Patient.ID),'-',Session.ID,'-',datestr(Session.date,'YYYYmmDD'),'-Rapport.docx']);
-    copyfile([Folder.toolbox,'Report\Skeleton_left_shoulder.png'],[Folder.data,'\Report\Skeleton_left_shoulder.png']);
-    copyfile([Folder.toolbox,'Report\Skeleton_right_shoulder.png'],[Folder.data,'\Report\Skeleton_right_shoulder.png']);
-    copyfile([Folder.toolbox,'Report\Skeleton_top.png'],[Folder.data,'\Report\Skeleton_top.png']);
-end
-Report = GenerateReportData(Trial);
-Normal = LoadNormativeData(Folder,Session,Patient);
-GenerateReportPlots(Folder,Session,Report,Normal);
+% disp('Génération du rapport');
+% cd(Folder.data);
+% mkdir('Report');
+% cd('Report');
+% close all;
+% if isempty(dir('*.docx'))
+%     copyfile([Folder.toolbox,'Report\KLAB - Analyse quantifiée du membre supérieur - Rapport - Template.docx'],[Folder.data,'\Report\',num2str(Patient.ID),'-',Session.ID,'-',datestr(Session.date,'YYYYmmDD'),'-Rapport.docx']);
+%     copyfile([Folder.toolbox,'Report\Skeleton_left_shoulder.png'],[Folder.data,'\Report\Skeleton_left_shoulder.png']);
+%     copyfile([Folder.toolbox,'Report\Skeleton_right_shoulder.png'],[Folder.data,'\Report\Skeleton_right_shoulder.png']);
+%     copyfile([Folder.toolbox,'Report\Skeleton_top.png'],[Folder.data,'\Report\Skeleton_top.png']);
+% end
+% Report = GenerateReportData(Trial);
+% Normal = LoadNormativeData(Folder,Session,Patient);
+% GenerateReportPlots(Folder,Session,Report,Normal);
 
 % -------------------------------------------------------------------------
 % STORE RESULTS

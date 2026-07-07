@@ -76,12 +76,12 @@ end
 Session.comments             = cell2mat(table2array(tSession(51,1)));
 Session.Pain.label           = table2array(tSession(35:47,1));
 if iscell(table2array(tSession(35:47,2)))
-    Session.Pain.Rvalue      = str2num(cell2mat(table2array(tSession(35:47,2))));
+    Session.Pain.Rvalue      = cellfun(@str2double,table2array(tSession(35:47,2)));
 else
     Session.Pain.Rvalue      = table2array(tSession(35:47,2));
 end
 if iscell(table2array(tSession(35:47,3)))
-    Session.Pain.Lvalue      = str2num(cell2mat(table2array(tSession(35:47,3))));
+    Session.Pain.Lvalue      = cellfun(@str2double,table2array(tSession(35:47,3)));
 else
     Session.Pain.Lvalue      = table2array(tSession(35:47,3));
 end

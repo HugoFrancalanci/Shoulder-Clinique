@@ -40,7 +40,15 @@ if contains(Trial.file,'CALIBRATION3') % May be used to defined EMG baselines
             end
             Trial.Emg(iemg).Signal.rcycle = [];
             Trial.Emg(iemg).Signal.lcycle = [];
-            Trial.Emg(iemg).Signal.units = '%';            
+            Trial.Emg(iemg).Signal.units = '%';
+        else
+            Trial.Emg(iemg).baseline = [];
+            Trial.Emg(iemg).Signal.full = [];
+            Trial.Emg(iemg).Signal.envelop = [];
+            Trial.Emg(iemg).Signal.onset = [];
+            Trial.Emg(iemg).Signal.rcycle = [];
+            Trial.Emg(iemg).Signal.lcycle = [];
+            Trial.Emg(iemg).Signal.units = '%';
         end
     end
 elseif contains(Trial.file,'ANALYTIC')
@@ -61,7 +69,15 @@ elseif contains(Trial.file,'ANALYTIC')
             end
             Trial.Emg(iemg).Signal.rcycle = [];
             Trial.Emg(iemg).Signal.lcycle = [];
-            Trial.Emg(iemg).Signal.units = '%';            
+            Trial.Emg(iemg).Signal.units = '%';
+        else
+            Trial.Emg(iemg).baseline = [];
+            Trial.Emg(iemg).Signal.full = [];
+            Trial.Emg(iemg).Signal.envelop = [];
+            Trial.Emg(iemg).Signal.onset = [];
+            Trial.Emg(iemg).Signal.rcycle = [];
+            Trial.Emg(iemg).Signal.lcycle = [];
+            Trial.Emg(iemg).Signal.units = '%';
         end
     end
 end

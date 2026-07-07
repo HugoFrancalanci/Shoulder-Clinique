@@ -86,7 +86,7 @@ if contains(c3dFiles.name,'ANALYTIC') || contains(c3dFiles.name,'FUNCTIONAL')
                 n  = size(Rcycles(icycle).range,1);
                 k0 = (1:n)';
                 k1 = (linspace(1,n,101))';
-                if ~isnan(sum(Trial.Marker(imarker).Trajectory.full(1,1,:)))
+                if ~isempty(Trial.Marker(imarker).Trajectory.full) && size(Trial.Marker(imarker).Trajectory.full,3) >= max(Rcycles(icycle).range) && ~isnan(sum(Trial.Marker(imarker).Trajectory.full(1,1,:)))
                     Trial.Marker(imarker).Trajectory.rcycle(:,:,:,icycle) = permute(interp1(k0,permute(Trial.Marker(imarker).Trajectory.full(:,:,Rcycles(icycle).range),[3,1,2]),k1,'spline'),[2,3,1]);
 
                 else
@@ -100,7 +100,7 @@ if contains(c3dFiles.name,'ANALYTIC') || contains(c3dFiles.name,'FUNCTIONAL')
                 n  = size(Lcycles(icycle).range,1);
                 k0 = (1:n)';
                 k1 = (linspace(1,n,101))';
-                if ~isnan(sum(Trial.Marker(imarker).Trajectory.full(1,1,:)))
+                if ~isempty(Trial.Marker(imarker).Trajectory.full) && size(Trial.Marker(imarker).Trajectory.full,3) >= max(Lcycles(icycle).range) && ~isnan(sum(Trial.Marker(imarker).Trajectory.full(1,1,:)))
                     Trial.Marker(imarker).Trajectory.lcycle(:,:,:,icycle) = permute(interp1(k0,permute(Trial.Marker(imarker).Trajectory.full(:,:,Lcycles(icycle).range),[3,1,2]),k1,'spline'),[2,3,1]);
                 else
                     Trial.Marker(imarker).Trajectory.lcycle(:,:,:,icycle) = nan(3,1,101,1);
