@@ -51,7 +51,9 @@ while iemg <= size(Trial.Emg,2) % All EMG (right and left)
 
         % 0- Signal preprocessing
         % https://doi.org/10.1371/journal.pone.0237727
-        [B,A]  = butter(1,[10 500]./(Trial.fanalog/2),'bandpass');
+        nyquist = Trial.fanalog/2;
+        highCut = min(500,0.99*nyquist); % Plafonné seulement si fanalog est trop basse (anciennes acquisitions) pour rester < Nyquist
+        [B,A]  = butter(1,[10 highCut]./nyquist,'bandpass');
         signal = filtfilt(B,A,signal0);
         signal = abs(signal);
         envelop = interpft(rms2(signal,0.02*Trial.fanalog,0.01*Trial.fanalog,1),length(signal)); % Used to compute SNR

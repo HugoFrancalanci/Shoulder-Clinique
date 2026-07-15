@@ -88,7 +88,7 @@ if contains(c3dFiles.name,'ANALYTIC') || contains(c3dFiles.name,'FUNCTIONAL')
                 n  = size(Rcycles(icycle).range,1);
                 k0 = (1:n)';
                 k1 = (linspace(1,n,101))';
-                if ~isempty(Trial.Marker(imarker).Trajectory.full) && size(Trial.Marker(imarker).Trajectory.full,3) >= max(Rcycles(icycle).range) && ~isnan(sum(Trial.Marker(imarker).Trajectory.full(1,1,:)))
+                if validCycleData(Trial.Marker(imarker).Trajectory.full,Rcycles(icycle).range)
                     Trial.Marker(imarker).Trajectory.rcycle(:,:,:,icycle) = permute(interp1(k0,permute(Trial.Marker(imarker).Trajectory.full(:,:,Rcycles(icycle).range),[3,1,2]),k1,'spline'),[2,3,1]);
 
                 else
@@ -102,7 +102,7 @@ if contains(c3dFiles.name,'ANALYTIC') || contains(c3dFiles.name,'FUNCTIONAL')
                 n  = size(Lcycles(icycle).range,1);
                 k0 = (1:n)';
                 k1 = (linspace(1,n,101))';
-                if ~isempty(Trial.Marker(imarker).Trajectory.full) && size(Trial.Marker(imarker).Trajectory.full,3) >= max(Lcycles(icycle).range) && ~isnan(sum(Trial.Marker(imarker).Trajectory.full(1,1,:)))
+                if validCycleData(Trial.Marker(imarker).Trajectory.full,Lcycles(icycle).range)
                     Trial.Marker(imarker).Trajectory.lcycle(:,:,:,icycle) = permute(interp1(k0,permute(Trial.Marker(imarker).Trajectory.full(:,:,Lcycles(icycle).range),[3,1,2]),k1,'spline'),[2,3,1]);
                 else
                     Trial.Marker(imarker).Trajectory.lcycle(:,:,:,icycle) = nan(3,1,101,1);
@@ -143,27 +143,27 @@ if contains(c3dFiles.name,'ANALYTIC') || contains(c3dFiles.name,'FUNCTIONAL')
                 n  = size(Rcycles(icycle).range,1);
                 k0 = (1:n)';
                 k1 = (linspace(1,n,101))';
-                if ~isempty(Trial.Segment(isegment).rM.full)
+                if validCycleData(Trial.Segment(isegment).rM.full,Rcycles(icycle).range)
                     Trial.Segment(isegment).rM.rcycle(:,:,:,icycle) = permute(interp1(k0,permute(Trial.Segment(isegment).rM.full(:,:,Rcycles(icycle).range),[3,1,2]),k1,'spline'),[2,3,1]);
                 else
                     Trial.Segment(isegment).rM.rcycle = [];
                 end
-                if ~isempty(Trial.Segment(isegment).Q.full)
+                if validCycleData(Trial.Segment(isegment).Q.full,Rcycles(icycle).range)
                     Trial.Segment(isegment).Q.rcycle(:,:,:,icycle) = permute(interp1(k0,permute(Trial.Segment(isegment).Q.full(:,:,Rcycles(icycle).range),[3,1,2]),k1,'spline'),[2,3,1]);
                 else
                     Trial.Segment(isegment).Q.rcycle = [];
                 end
-                if ~isempty(Trial.Segment(isegment).T.full)
+                if validCycleData(Trial.Segment(isegment).T.full,Rcycles(icycle).range)
                     Trial.Segment(isegment).T.rcycle(:,:,:,icycle) = permute(interp1(k0,permute(Trial.Segment(isegment).T.full(:,:,Rcycles(icycle).range),[3,1,2]),k1,'spline'),[2,3,1]);
                 else
                     Trial.Segment(isegment).T.rcycle = [];
                 end
-                if ~isempty(Trial.Segment(isegment).Euler.full)
+                if validCycleData(Trial.Segment(isegment).Euler.full,Rcycles(icycle).range)
                     Trial.Segment(isegment).Euler.rcycle(:,:,:,icycle) = permute(interp1(k0,permute(Trial.Segment(isegment).Euler.full(:,:,Rcycles(icycle).range),[3,1,2]),k1,'spline'),[2,3,1]);
                 else
                     Trial.Segment(isegment).Euler.rcycle = [];
                 end
-                if ~isempty(Trial.Segment(isegment).dj.full)
+                if validCycleData(Trial.Segment(isegment).dj.full,Rcycles(icycle).range)
                     Trial.Segment(isegment).dj.rcycle(:,:,:,icycle) = permute(interp1(k0,permute(Trial.Segment(isegment).dj.full(:,:,Rcycles(icycle).range),[3,1,2]),k1,'spline'),[2,3,1]);
                 else
                     Trial.Segment(isegment).dj.rcycle = [];
@@ -176,27 +176,27 @@ if contains(c3dFiles.name,'ANALYTIC') || contains(c3dFiles.name,'FUNCTIONAL')
                 n  = size(Lcycles(icycle).range,1);
                 k0 = (1:n)';
                 k1 = (linspace(1,n,101))';
-                if ~isempty(Trial.Segment(isegment).rM.full)
+                if validCycleData(Trial.Segment(isegment).rM.full,Lcycles(icycle).range)
                     Trial.Segment(isegment).rM.lcycle(:,:,:,icycle) = permute(interp1(k0,permute(Trial.Segment(isegment).rM.full(:,:,Lcycles(icycle).range),[3,1,2]),k1,'spline'),[2,3,1]);
                 else
                     Trial.Segment(isegment).rM.lcycle = [];
                 end
-                if ~isempty(Trial.Segment(isegment).Q.full)
+                if validCycleData(Trial.Segment(isegment).Q.full,Lcycles(icycle).range)
                     Trial.Segment(isegment).Q.lcycle(:,:,:,icycle) = permute(interp1(k0,permute(Trial.Segment(isegment).Q.full(:,:,Lcycles(icycle).range),[3,1,2]),k1,'spline'),[2,3,1]);
                 else
                     Trial.Segment(isegment).Q.lcycle = [];
                 end
-                if ~isempty(Trial.Segment(isegment).T.full)
+                if validCycleData(Trial.Segment(isegment).T.full,Lcycles(icycle).range)
                     Trial.Segment(isegment).T.lcycle(:,:,:,icycle) = permute(interp1(k0,permute(Trial.Segment(isegment).T.full(:,:,Lcycles(icycle).range),[3,1,2]),k1,'spline'),[2,3,1]);
                 else
                     Trial.Segment(isegment).T.lcycle = [];
                 end
-                if ~isempty(Trial.Segment(isegment).Euler.full)
+                if validCycleData(Trial.Segment(isegment).Euler.full,Lcycles(icycle).range)
                     Trial.Segment(isegment).Euler.lcycle(:,:,:,icycle) = permute(interp1(k0,permute(Trial.Segment(isegment).Euler.full(:,:,Lcycles(icycle).range),[3,1,2]),k1,'spline'),[2,3,1]);
                 else
                     Trial.Segment(isegment).Euler.lcycle = [];
                 end
-                if ~isempty(Trial.Segment(isegment).dj.full)
+                if validCycleData(Trial.Segment(isegment).dj.full,Lcycles(icycle).range)
                     Trial.Segment(isegment).dj.lcycle(:,:,:,icycle) = permute(interp1(k0,permute(Trial.Segment(isegment).dj.full(:,:,Lcycles(icycle).range),[3,1,2]),k1,'spline'),[2,3,1]);
                 else
                     Trial.Segment(isegment).dj.lcycle = [];
@@ -212,15 +212,15 @@ if contains(c3dFiles.name,'ANALYTIC') || contains(c3dFiles.name,'FUNCTIONAL')
                 n  = size(Rcycles(icycle).range,1);
                 k0 = (1:n)';
                 k1 = (linspace(1,n,101))';
-                if ~isempty(Trial.Joint(ijoint).T.full)
+                if validCycleData(Trial.Joint(ijoint).T.full,Rcycles(icycle).range)
                     Trial.Joint(ijoint).T.rcycle(:,:,:,icycle) = permute(interp1(k0,permute(Trial.Joint(ijoint).T.full(:,:,Rcycles(icycle).range),[3,1,2]),k1,'spline'),[2,3,1]);
                 else
                     Trial.Joint(ijoint).T.rcycle = [];
                 end
-                if ~isempty(Trial.Joint(ijoint).Euler.full)
+                if validCycleData(Trial.Joint(ijoint).Euler.full,Rcycles(icycle).range)
                     Trial.Joint(ijoint).Euler.rcycle(:,:,:,icycle) = permute(interp1(k0,permute(Trial.Joint(ijoint).Euler.full(:,:,Rcycles(icycle).range),[3,1,2]),k1,'spline'),[2,3,1]);
                     if ijoint == 1 || ijoint == 6
-                        if ~isempty(Trial.Joint(ijoint).ElevationPlane.full)
+                        if validCycleData(Trial.Joint(ijoint).ElevationPlane.full,Rcycles(icycle).range)
                             Trial.Joint(ijoint).ElevationPlane.rcycle(:,:,:,icycle) = permute(interp1(k0,permute(Trial.Joint(ijoint).ElevationPlane.full(:,:,Rcycles(icycle).range),[3,1,2]),k1,'spline'),[2,3,1]);
                         else
                             Trial.Joint(ijoint).ElevationPlane.rcycle = [];
@@ -230,7 +230,7 @@ if contains(c3dFiles.name,'ANALYTIC') || contains(c3dFiles.name,'FUNCTIONAL')
                     Trial.Joint(ijoint).Euler.rcycle = [];
                     Trial.Joint(ijoint).ElevationPlane.rcycle = [];
                 end
-                if ~isempty(Trial.Joint(ijoint).dj.full)
+                if validCycleData(Trial.Joint(ijoint).dj.full,Rcycles(icycle).range)
                     Trial.Joint(ijoint).dj.rcycle(:,:,:,icycle) = permute(interp1(k0,permute(Trial.Joint(ijoint).dj.full(:,:,Rcycles(icycle).range),[3,1,2]),k1,'spline'),[2,3,1]);
                 else
                     Trial.Joint(ijoint).dj.rcycle = [];
@@ -243,15 +243,15 @@ if contains(c3dFiles.name,'ANALYTIC') || contains(c3dFiles.name,'FUNCTIONAL')
                 n  = size(Lcycles(icycle).range,1);
                 k0 = (1:n)';
                 k1 = (linspace(1,n,101))';
-                if ~isempty(Trial.Joint(ijoint).T.full)
+                if validCycleData(Trial.Joint(ijoint).T.full,Lcycles(icycle).range)
                     Trial.Joint(ijoint).T.lcycle(:,:,:,icycle) = permute(interp1(k0,permute(Trial.Joint(ijoint).T.full(:,:,Lcycles(icycle).range),[3,1,2]),k1,'spline'),[2,3,1]);
                 else
                     Trial.Joint(ijoint).T.lcycle = [];
                 end
-                if ~isempty(Trial.Joint(ijoint).Euler.full)
+                if validCycleData(Trial.Joint(ijoint).Euler.full,Lcycles(icycle).range)
                     Trial.Joint(ijoint).Euler.lcycle(:,:,:,icycle) = permute(interp1(k0,permute(Trial.Joint(ijoint).Euler.full(:,:,Lcycles(icycle).range),[3,1,2]),k1,'spline'),[2,3,1]);
                     if ijoint == 1 || ijoint == 6
-                        if ~isempty(Trial.Joint(ijoint).ElevationPlane.full)
+                        if validCycleData(Trial.Joint(ijoint).ElevationPlane.full,Lcycles(icycle).range)
                             Trial.Joint(ijoint).ElevationPlane.lcycle(:,:,:,icycle) = permute(interp1(k0,permute(Trial.Joint(ijoint).ElevationPlane.full(:,:,Lcycles(icycle).range),[3,1,2]),k1,'spline'),[2,3,1]);
                         else
                             Trial.Joint(ijoint).ElevationPlane.lcycle = [];
@@ -261,7 +261,7 @@ if contains(c3dFiles.name,'ANALYTIC') || contains(c3dFiles.name,'FUNCTIONAL')
                     Trial.Joint(ijoint).Euler.lcycle = [];
                     Trial.Joint(ijoint).ElevationPlane.lcycle = [];
                 end
-                if ~isempty(Trial.Joint(ijoint).dj.full)
+                if validCycleData(Trial.Joint(ijoint).dj.full,Lcycles(icycle).range)
                     Trial.Joint(ijoint).dj.lcycle(:,:,:,icycle) = permute(interp1(k0,permute(Trial.Joint(ijoint).dj.full(:,:,Lcycles(icycle).range),[3,1,2]),k1,'spline'),[2,3,1]);
                 else
                     Trial.Joint(ijoint).dj.lcycle = [];
@@ -372,6 +372,11 @@ end
 
 cycles = [];
 
+if all(isnan(value))
+    fprintf('\n %s (%s) - Signal entièrement invalide (NaN) -- cycle non détectable, ignoré.\n', filename, label);
+    return;
+end
+
 fig = figure('Position',[100 200 1400 500]);
 fprintf('\n %s (%s)\n', filename, label);
 fprintf('  - Cliquez sur la figure pour définir le seuil (Y) et le départ (X). Re-cliquez pour ajuster.\n');
@@ -476,7 +481,11 @@ if ncycles == 0
 end
 
 for ic = 1:ncycles
-    cycles(ic).range = (starts(ic):stops(ic))';
+    if stops(ic) - starts(ic) >= 1 % Au moins 2 frames requises pour l'interpolation spline
+        cycles(end+1).range = (starts(ic):stops(ic))'; %#ok<AGROW>
+    else
+        fprintf('  - Cycle %d ignoré (1 frame, détection trop brève).\n', ic);
+    end
 end
 end
 
@@ -526,7 +535,21 @@ for imin = 1:2:size(localmin,1)
 end
 icycle = 1;
 for iindex = 1:2:size(index,2)-1
-    cycles(icycle).range = (index(iindex):index(iindex+1))';
-    icycle = icycle+1;
+    if index(iindex+1) - index(iindex) >= 1 % Au moins 2 frames requises pour l'interpolation spline
+        cycles(icycle).range = (index(iindex):index(iindex+1))';
+        icycle = icycle+1;
+    else
+        fprintf('  - Cycle ignoré (1 frame, clics trop rapprochés).\n');
+    end
 end
+end
+
+% =========================================================================
+% SUBFUNCTION: check that a data block has at least 2 valid (non-NaN)
+% frames within the given cycle range, to avoid interp1/spline crashing
+% (segment/marker/joint invalide pour ce côté, ex. non instrumenté)
+% =========================================================================
+function ok = validCycleData(fullData, rng)
+ok = numel(rng) >= 2 && ~isempty(fullData) && size(fullData,3) >= max(rng) ...
+     && ~any(isnan(reshape(fullData(:,:,rng),[],1)));
 end
